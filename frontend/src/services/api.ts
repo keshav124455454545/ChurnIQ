@@ -17,9 +17,17 @@ const getCandidateBaseUrls = (): string[] => {
     return [import.meta.env.VITE_API_BASE_URL.replace(/\/$/, '')];
   }
   const candidates: string[] = [];
-  if (typeof window !== 'undefined' && window.location.hostname) {
-    const proto = window.location.protocol || 'http:';
-    candidates.push(`${proto}//${window.location.hostname}:8000`);
+  if (typeof window !== 'undefined' && window.location) {
+    const isViteDev = window.location.port === '5173' || window.location.port === '3000';
+    if (!isViteDev) {
+      // In production (Render, unified FastAPI server, etc.), use same origin
+      candidates.push(window.location.origin);
+      candidates.push('');
+    } else {
+      // In local Vite dev or preview, connect to backend on port 8000
+      const proto = window.location.protocol || 'http:';
+      candidates.push(`${proto}//${window.location.hostname}:8000`);
+    }
   }
   candidates.push('http://127.0.0.1:8000');
   candidates.push('http://localhost:8000');

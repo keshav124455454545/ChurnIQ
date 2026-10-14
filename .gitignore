@@ -14,11 +14,9 @@ ENV/
 .coverage
 htmlcov/
 
-# Node & Frontend Build
+# Node Dependencies (dist is tracked for single-service cloud deployment)
 node_modules/
 frontend/node_modules/
-frontend/dist/
-dist/
 
 # Environment Variables
 .env

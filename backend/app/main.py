@@ -2,13 +2,21 @@
 ChurnIQ FastAPI Prediction Backend Application.
 """
 
-from typing import Any, Dict, List
 import logging
+import sys
+from pathlib import Path
+from typing import Any, Dict, List
 from contextlib import asynccontextmanager
+
+# Ensure backend directory is in sys.path regardless of execution context
+_backend_dir = Path(__file__).resolve().parent.parent
+if str(_backend_dir) not in sys.path:
+    sys.path.insert(0, str(_backend_dir))
 
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.model_loader import model_service
@@ -220,3 +228,29 @@ async def get_insights():
             {"cohort": "49-72 Months", "churn_rate_pct": 9.51},
         ],
     }
+
+
+# Static frontend mounting and SPA client routing (enables unified single-service hosting on Render)
+dist_dir = settings.BASE_DIR / "frontend" / "dist"
+if dist_dir.is_dir():
+    assets_dir = dist_dir / "assets"
+    if assets_dir.is_dir():
+        app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="frontend_assets")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def serve_spa_frontend(full_path: str):
+        # Do not catch API routes or documentation
+        api_prefixes = ("api", "docs", "redoc", "openapi.json", "health", "predict", "predict-batch", "model-info", "metrics", "insights")
+        if full_path.startswith(api_prefixes):
+            raise HTTPException(status_code=404, detail="Not Found")
+
+        file_path = dist_dir / full_path
+        if file_path.is_file():
+            return FileResponse(file_path)
+
+        index_file = dist_dir / "index.html"
+        if index_file.is_file():
+            return FileResponse(index_file)
+
+        raise HTTPException(status_code=404, detail="Not Found")
+

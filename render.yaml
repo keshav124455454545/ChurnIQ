@@ -1,10 +1,10 @@
 services:
-  # FastAPI ML Backend
+  # ChurnIQ Full-Stack Web Service (FastAPI ML Backend + React UI)
   - type: web
-    name: churniq-api
+    name: churniq
     runtime: python
-    buildCommand: pip install -r backend/requirements.txt
-    startCommand: uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port $PORT
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.9
@@ -12,14 +12,3 @@ services:
         value: production
       - key: CORS_ORIGINS
         value: "*"
-
-  # Frontend Static Site (Optional on Render, can also use Vercel/Netlify)
-  - type: web
-    name: churniq-frontend
-    runtime: static
-    buildCommand: cd frontend && npm install && npm run build
-    staticPublishPath: frontend/dist
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
