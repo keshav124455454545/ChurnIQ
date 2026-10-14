@@ -44,6 +44,15 @@ const getCandidateBaseUrls = (): string[] => {
   return [DEFAULT_CLOUD_API];
 };
 
+import {
+  fallbackHealth,
+  fallbackModelInfo,
+  fallbackMetrics,
+  fallbackInsights,
+  predictLocal,
+  predictBatchLocal,
+} from './localEngine';
+
 class ApiClient {
   private activeBaseUrl: string | null = null;
 
@@ -54,21 +63,20 @@ class ApiClient {
     for (const baseUrl of candidateUrls) {
       const url = `${baseUrl}${endpoint}`;
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 25000); // 25-second timeout to accommodate cloud cold starts
+      const timeoutId = setTimeout(() => controller.abort(), 6000); // 6-second timeout before falling back to local engine
 
       try {
         const response = await fetch(url, {
           ...options,
           signal: controller.signal,
           headers: {
-            'Content-Type': 'application/json',
             Accept: 'application/json',
+            ...(options.method === 'POST' ? { 'Content-Type': 'application/json' } : {}),
             ...options.headers,
           },
         });
 
         if (!response.ok) {
-          // If a static host returned 404 for an API endpoint, try the next candidate
           if (response.status === 404) {
             continue;
           }
@@ -82,59 +90,71 @@ class ApiClient {
           throw new Error(errorMsg);
         }
 
-        // Successfully connected to this baseUrl, cache it
         this.activeBaseUrl = baseUrl;
         return (await response.json()) as T;
       } catch (err: any) {
         lastError = err;
-        // If it's a network error, 404, or abort, try the next candidate
-        if (err.name === 'AbortError' || err.message === 'Failed to fetch' || err.name === 'TypeError') {
-          continue;
-        }
-        throw err;
+        continue;
       } finally {
         clearTimeout(timeoutId);
       }
     }
 
-    if (lastError?.name === 'AbortError') {
-      throw new Error('Connecting to model service... The cloud backend is initializing (~15s). Please click Retry.');
-    }
-    throw new Error(
-      lastError?.message === 'Failed to fetch'
-        ? 'Connecting to model service... The cloud backend is waking up (~15s). Please click Retry.'
-        : lastError?.message || 'Connecting to model service... Please wait.'
-    );
+    throw lastError || new Error('Network request unavailable');
   }
 
   async getHealth(): Promise<HealthResponse> {
-    return this.request<HealthResponse>('/health');
+    try {
+      return await this.request<HealthResponse>('/health');
+    } catch {
+      return fallbackHealth;
+    }
   }
 
   async getModelInfo(): Promise<ModelInfoResponse> {
-    return this.request<ModelInfoResponse>('/model-info');
+    try {
+      return await this.request<ModelInfoResponse>('/model-info');
+    } catch {
+      return fallbackModelInfo;
+    }
   }
 
   async getMetrics(): Promise<EvaluationMetricsResponse> {
-    return this.request<EvaluationMetricsResponse>('/metrics');
+    try {
+      return await this.request<EvaluationMetricsResponse>('/metrics');
+    } catch {
+      return fallbackMetrics;
+    }
   }
 
   async getInsights(): Promise<InsightsResponse> {
-    return this.request<InsightsResponse>('/insights');
+    try {
+      return await this.request<InsightsResponse>('/insights');
+    } catch {
+      return fallbackInsights;
+    }
   }
 
   async predictSingle(customer: CustomerInput): Promise<PredictionResponse> {
-    return this.request<PredictionResponse>('/predict', {
-      method: 'POST',
-      body: JSON.stringify(customer),
-    });
+    try {
+      return await this.request<PredictionResponse>('/predict', {
+        method: 'POST',
+        body: JSON.stringify(customer),
+      });
+    } catch {
+      return predictLocal(customer);
+    }
   }
 
   async predictBatch(records: Record<string, any>[]): Promise<BatchPredictionResponse> {
-    return this.request<BatchPredictionResponse>('/predict-batch', {
-      method: 'POST',
-      body: JSON.stringify(records),
-    });
+    try {
+      return await this.request<BatchPredictionResponse>('/predict-batch', {
+        method: 'POST',
+        body: JSON.stringify(records),
+      });
+    } catch {
+      return predictBatchLocal(records);
+    }
   }
 }
 

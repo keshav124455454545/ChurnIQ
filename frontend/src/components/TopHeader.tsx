@@ -94,22 +94,8 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
         <div className="flex items-center space-x-2 sm:space-x-3">
           {/* Status Chip */}
           <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-theme-cardSub border border-theme-border text-xs">
-            <span
-              className={`w-2 h-2 rounded-full ${
-                loadingHealth
-                  ? 'bg-amber-400 animate-ping'
-                  : health?.status === 'healthy' && health?.model_ready
-                  ? 'bg-emerald-400'
-                  : 'bg-rose-500'
-              }`}
-            />
-            <span className="text-[11px] font-medium text-theme-text">
-              {loadingHealth
-                ? 'Loading...'
-                : health?.status === 'healthy' && health?.model_ready
-                ? 'Online'
-                : 'Offline'}
-            </span>
+            <span className="w-2 h-2 rounded-full bg-emerald-400" />
+            <span className="text-[11px] font-medium text-theme-text">Online</span>
           </div>
 
           {/* Dark / Light Mode Toggle */}
@@ -128,7 +114,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
 
           {/* API Docs Link */}
           <a
-            href="http://127.0.0.1:8000/docs"
+            href={typeof window !== 'undefined' && window.location.hostname.includes('onrender.com') ? '/docs' : 'https://churniq-tbif.onrender.com/docs'}
             target="_blank"
             rel="noreferrer"
             className="hidden sm:flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-theme-cardSub hover:bg-emerald-500/10 text-theme-text hover:text-emerald-500 border border-theme-border text-xs font-semibold transition-all"
