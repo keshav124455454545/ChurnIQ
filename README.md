@@ -134,28 +134,33 @@ npm run build
 
 ## 8. Cloud Deployment Guide
 
-### A. Backend Deployment (Render)
-1. Link your GitHub repository to [Render](https://render.com).
-2. Create a new **Web Service**.
-3. Set the following parameters:
-   - **Environment:** `Python`
-   - **Root Directory:** `backend`
-   - **Build Command:** `pip install -r requirements.txt`
-   - **Start Command:** `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-4. Set Environment Variables:
-   - `ENVIRONMENT` = `production`
-   - `CORS_ORIGINS` = `https://your-app-name.netlify.app`
-   - `ARTIFACTS_DIR` = `../ml/artifacts`
+### A. Single Web Service Deployment (Render — Recommended)
+Deploys both the FastAPI ML Backend and React Frontend together as a single unified service (100% Free Tier compatible, zero CORS or port configuration needed):
 
-### B. Frontend Deployment (Netlify)
-1. Link your GitHub repository to [Netlify](https://netlify.com).
-2. Set build configuration:
-   - **Base directory:** `frontend`
-   - **Build command:** `npm run build`
-   - **Publish directory:** `dist`
-3. Set Environment Variables:
-   - `VITE_API_BASE_URL` = `https://your-render-backend.onrender.com`
-4. SPA routing is automatically handled by `frontend/public/_redirects`.
+1. Go to [Render Dashboard](https://dashboard.render.com) and click **New +** → **Web Service**.
+2. Connect your GitHub repository: `https://github.com/keshav124455454545/ChurnIQ.git`.
+3. Configure the service fields:
+   - **Name:** `churniq` (or any custom name)
+   - **Region:** Any (e.g., Oregon / Frankfurt / Singapore)
+   - **Branch:** `main`
+   - **Root Directory:** *(leave blank)*
+   - **Runtime / Language:** `Python 3`
+   - **Build Command:** `pip install -r requirements.txt`
+   - **Start Command:** `uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT`
+   - **Instance Type:** `Free`
+4. Click **Create Web Service**.
+5. Once deployed, visiting your Render URL (e.g. `https://churniq.onrender.com`) opens the full interactive web application with active ML predictions.
+
+### B. Deploying via Render Blueprints (render.yaml)
+1. Go to [Render Dashboard](https://dashboard.render.com) and click **New +** → **Blueprint**.
+2. Select your repository `ChurnIQ`.
+3. Render will automatically read `render.yaml` and configure the web service with one click.
+
+### C. Optional Separate Frontend (Netlify / Vercel)
+If you prefer hosting the React static build separately:
+1. Link your repository to Netlify / Vercel.
+2. Base directory: `frontend`, Build command: `npm run build`, Publish directory: `frontend/dist`.
+3. Add Environment Variable: `VITE_API_BASE_URL` = `https://your-render-app.onrender.com`.
 
 ---
 
