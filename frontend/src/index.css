@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --theme-bg: #f8fafc;
+  --theme-card: #ffffff;
+  --theme-card-sub: #f1f5f9;
+  --theme-border: #e2e8f0;
+  --theme-hover: #f1f5f9;
+  --theme-text: #0f172a;
+  --theme-muted: #64748b;
+  --theme-sidebar: #ffffff;
+}
+
+.dark {
+  --theme-bg: #090d16;
+  --theme-card: #0f1523;
+  --theme-card-sub: #161f33;
+  --theme-border: #1e293b;
+  --theme-hover: #1e293b;
+  --theme-text: #f8fafc;
+  --theme-muted: #94a3b8;
+  --theme-sidebar: #0b0f1a;
+}
+
+@layer base {
+  body {
+    background-color: var(--theme-bg);
+    color: var(--theme-text);
+    @apply antialiased font-sans min-h-screen transition-colors duration-200 overflow-x-hidden;
+  }
+}
+
+/* Custom sleek emerald scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--theme-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--theme-border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #10b981;
+}

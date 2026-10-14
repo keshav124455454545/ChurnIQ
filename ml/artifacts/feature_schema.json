@@ -1,0 +1,178 @@
+{
+  "target": "Churn",
+  "target_mapping": {
+    "No": 0,
+    "Yes": 1
+  },
+  "positive_class": 1,
+  "identifier_column": "customerID",
+  "numerical_features": {
+    "tenure": {
+      "type": "float",
+      "min": 0.0,
+      "max": 72.0,
+      "mean": 32.37,
+      "median": 29.0
+    },
+    "MonthlyCharges": {
+      "type": "float",
+      "min": 18.25,
+      "max": 118.75,
+      "mean": 64.76,
+      "median": 70.35
+    },
+    "TotalCharges": {
+      "type": "float",
+      "min": 0.0,
+      "max": 8684.8,
+      "mean": 2279.73,
+      "median": 1394.55
+    }
+  },
+  "categorical_features": {
+    "gender": {
+      "type": "string",
+      "categories": [
+        "Female",
+        "Male"
+      ]
+    },
+    "SeniorCitizen": {
+      "type": "string",
+      "categories": [
+        "0",
+        "1"
+      ]
+    },
+    "Partner": {
+      "type": "string",
+      "categories": [
+        "No",
+        "Yes"
+      ]
+    },
+    "Dependents": {
+      "type": "string",
+      "categories": [
+        "No",
+        "Yes"
+      ]
+    },
+    "PhoneService": {
+      "type": "string",
+      "categories": [
+        "No",
+        "Yes"
+      ]
+    },
+    "MultipleLines": {
+      "type": "string",
+      "categories": [
+        "No",
+        "No phone service",
+        "Yes"
+      ]
+    },
+    "InternetService": {
+      "type": "string",
+      "categories": [
+        "DSL",
+        "Fiber optic",
+        "No"
+      ]
+    },
+    "OnlineSecurity": {
+      "type": "string",
+      "categories": [
+        "No",
+        "No internet service",
+        "Yes"
+      ]
+    },
+    "OnlineBackup": {
+      "type": "string",
+      "categories": [
+        "No",
+        "No internet service",
+        "Yes"
+      ]
+    },
+    "DeviceProtection": {
+      "type": "string",
+      "categories": [
+        "No",
+        "No internet service",
+        "Yes"
+      ]
+    },
+    "TechSupport": {
+      "type": "string",
+      "categories": [
+        "No",
+        "No internet service",
+        "Yes"
+      ]
+    },
+    "StreamingTV": {
+      "type": "string",
+      "categories": [
+        "No",
+        "No internet service",
+        "Yes"
+      ]
+    },
+    "StreamingMovies": {
+      "type": "string",
+      "categories": [
+        "No",
+        "No internet service",
+        "Yes"
+      ]
+    },
+    "Contract": {
+      "type": "string",
+      "categories": [
+        "Month-to-month",
+        "One year",
+        "Two year"
+      ]
+    },
+    "PaperlessBilling": {
+      "type": "string",
+      "categories": [
+        "No",
+        "Yes"
+      ]
+    },
+    "PaymentMethod": {
+      "type": "string",
+      "categories": [
+        "Bank transfer (automatic)",
+        "Credit card (automatic)",
+        "Electronic check",
+        "Mailed check"
+      ]
+    }
+  },
+  "all_feature_names": [
+    "tenure",
+    "MonthlyCharges",
+    "TotalCharges",
+    "gender",
+    "SeniorCitizen",
+    "Partner",
+    "Dependents",
+    "PhoneService",
+    "MultipleLines",
+    "InternetService",
+    "OnlineSecurity",
+    "OnlineBackup",
+    "DeviceProtection",
+    "TechSupport",
+    "StreamingTV",
+    "StreamingMovies",
+    "Contract",
+    "PaperlessBilling",
+    "PaymentMethod"
+  ]
+}

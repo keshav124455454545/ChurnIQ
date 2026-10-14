@@ -1,0 +1,23 @@
+{
+  "model_name": "ChurnIQ-RandomForest",
+  "version": "1.0.0",
+  "champion_algorithm": "RandomForest",
+  "created_at": "2026-10-14T00:59:20.545383",
+  "dataset_source": "IBM Telco Customer Churn (telco_churn_cleaned.csv)",
+  "framework": "scikit-learn 1.9.1",
+  "python_version": "3.14.3",
+  "random_seed": 42,
+  "model_selection_metric": "roc_auc",
+  "decision_threshold": 0.5,
+  "risk_thresholds": {
+    "low": "< 0.35",
+    "medium": "0.35 - 0.65",
+    "high": ">= 0.65"
+  },
+  "test_roc_auc": 0.8420109018574492,
+  "test_pr_auc": 0.6488281146217708,
+  "test_recall": 0.7914438502673797,
+  "test_precision": 0.5202108963093146,
+  "test_f1": 0.6277836691410392,
+  "test_accuracy": 0.7508871540099361
+}
