@@ -12,6 +12,8 @@ import {
   InsightsResponse,
 } from '../types';
 
+const DEFAULT_CLOUD_API = 'https://churniq-tbif.onrender.com';
+
 const getCandidateBaseUrls = (): string[] => {
   if (import.meta.env.VITE_API_BASE_URL) {
     return [import.meta.env.VITE_API_BASE_URL.replace(/\/$/, '')];
@@ -19,16 +21,27 @@ const getCandidateBaseUrls = (): string[] => {
   const candidates: string[] = [];
   if (typeof window !== 'undefined' && window.location) {
     const isViteDev = window.location.port === '5173' || window.location.port === '3000';
-    if (!isViteDev) {
-      // In production (Render, unified FastAPI server, etc.), use same origin
+    const isStaticHost =
+      window.location.hostname.includes('vercel.app') ||
+      window.location.hostname.includes('netlify.app') ||
+      window.location.hostname.includes('github.io');
+
+    if (isStaticHost) {
+      // On static platforms like Vercel, prioritize the live Render backend
+      candidates.push(DEFAULT_CLOUD_API);
+    } else if (!isViteDev) {
       candidates.push(window.location.origin);
       candidates.push('');
+      candidates.push(DEFAULT_CLOUD_API);
     } else {
-      // In local Vite dev or preview, connect to backend on port 8000
       const proto = window.location.protocol || 'http:';
       candidates.push(`${proto}//${window.location.hostname}:8000`);
+      candidates.push('http://127.0.0.1:8000');
+      candidates.push('http://localhost:8000');
+      candidates.push(DEFAULT_CLOUD_API);
     }
   }
+  candidates.push(DEFAULT_CLOUD_API);
   candidates.push('http://127.0.0.1:8000');
   candidates.push('http://localhost:8000');
   return Array.from(new Set(candidates));
@@ -58,6 +71,10 @@ class ApiClient {
         });
 
         if (!response.ok) {
+          // If a static host returned 404 for an API endpoint, try the next candidate
+          if (response.status === 404) {
+            continue;
+          }
           let errorMsg = `Server error (${response.status})`;
           try {
             const errJson = await response.json();
@@ -73,7 +90,7 @@ class ApiClient {
         return (await response.json()) as T;
       } catch (err: any) {
         lastError = err;
-        // If it's a network error or abort, try the next candidate
+        // If it's a network error, 404, or abort, try the next candidate
         if (err.name === 'AbortError' || err.message === 'Failed to fetch' || err.name === 'TypeError') {
           continue;
         }
