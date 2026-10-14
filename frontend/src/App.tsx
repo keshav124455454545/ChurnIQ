@@ -71,7 +71,11 @@ export const App: React.FC = () => {
         if (mMetrics.status === 'fulfilled') setMetrics(mMetrics.value);
       }
     } catch (err: any) {
-      setBackendError(err.message || 'Could not connect to backend API server.');
+      setBackendError(err.message || 'Connecting to model service... Please wait.');
+      // Auto-retry once after 2.5s in case cloud backend was spinning up from sleep
+      setTimeout(() => {
+        fetchBackendData();
+      }, 2500);
     } finally {
       setLoadingHealth(false);
       setIsRetrying(false);

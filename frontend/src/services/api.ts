@@ -15,49 +15,46 @@ import {
 const DEFAULT_CLOUD_API = 'https://churniq-tbif.onrender.com';
 
 const getCandidateBaseUrls = (): string[] => {
-  if (import.meta.env.VITE_API_BASE_URL) {
-    return [import.meta.env.VITE_API_BASE_URL.replace(/\/$/, '')];
-  }
-  const candidates: string[] = [];
-  if (typeof window !== 'undefined' && window.location) {
-    const isViteDev = window.location.port === '5173' || window.location.port === '3000';
-    const isStaticHost =
-      window.location.hostname.includes('vercel.app') ||
-      window.location.hostname.includes('netlify.app') ||
-      window.location.hostname.includes('github.io');
+  const isBrowser = typeof window !== 'undefined';
+  const hostname = isBrowser ? window.location.hostname : '';
+  const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
 
-    if (isStaticHost) {
-      // On static platforms like Vercel, prioritize the live Render backend
-      candidates.push(DEFAULT_CLOUD_API);
-    } else if (!isViteDev) {
-      candidates.push(window.location.origin);
-      candidates.push('');
-      candidates.push(DEFAULT_CLOUD_API);
-    } else {
-      const proto = window.location.protocol || 'http:';
-      candidates.push(`${proto}//${window.location.hostname}:8000`);
-      candidates.push('http://127.0.0.1:8000');
-      candidates.push('http://localhost:8000');
-      candidates.push(DEFAULT_CLOUD_API);
-    }
+  // 1. Explicit environment variable override if provided
+  if (import.meta.env.VITE_API_BASE_URL) {
+    const custom = import.meta.env.VITE_API_BASE_URL.replace(/\/$/, '');
+    return [custom, DEFAULT_CLOUD_API];
   }
-  candidates.push(DEFAULT_CLOUD_API);
-  candidates.push('http://127.0.0.1:8000');
-  candidates.push('http://localhost:8000');
-  return Array.from(new Set(candidates));
+
+  // 2. If running locally on localhost/127.0.0.1, connect to local backend port 8000 with cloud fallback
+  if (isLocalhost) {
+    return [
+      `http://${hostname || 'localhost'}:8000`,
+      'http://127.0.0.1:8000',
+      'http://localhost:8000',
+      DEFAULT_CLOUD_API,
+    ];
+  }
+
+  // 3. If running on Render (unified full-stack), use relative path first (pure same-origin, zero CORS)
+  if (hostname.includes('onrender.com')) {
+    return ['', DEFAULT_CLOUD_API];
+  }
+
+  // 4. If running on Vercel, Netlify, or any other cloud host, use the live Render backend
+  return [DEFAULT_CLOUD_API];
 };
 
 class ApiClient {
   private activeBaseUrl: string | null = null;
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const candidateUrls = this.activeBaseUrl ? [this.activeBaseUrl] : getCandidateBaseUrls();
+    const candidateUrls = this.activeBaseUrl !== null ? [this.activeBaseUrl] : getCandidateBaseUrls();
     let lastError: any = null;
 
     for (const baseUrl of candidateUrls) {
       const url = `${baseUrl}${endpoint}`;
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8-second timeout per candidate
+      const timeoutId = setTimeout(() => controller.abort(), 25000); // 25-second timeout to accommodate cloud cold starts
 
       try {
         const response = await fetch(url, {
@@ -94,7 +91,6 @@ class ApiClient {
         if (err.name === 'AbortError' || err.message === 'Failed to fetch' || err.name === 'TypeError') {
           continue;
         }
-        // If it's a 4xx/5xx error from the server itself, don't keep trying other URLs
         throw err;
       } finally {
         clearTimeout(timeoutId);
@@ -102,12 +98,12 @@ class ApiClient {
     }
 
     if (lastError?.name === 'AbortError') {
-      throw new Error('Connection timed out. Please check if the backend server is running.');
+      throw new Error('Connecting to model service... The cloud backend is initializing (~15s). Please click Retry.');
     }
     throw new Error(
       lastError?.message === 'Failed to fetch'
-        ? 'Could not connect to backend server. Make sure the API is running on port 8000.'
-        : lastError?.message || 'Network request failed.'
+        ? 'Connecting to model service... The cloud backend is waking up (~15s). Please click Retry.'
+        : lastError?.message || 'Connecting to model service... Please wait.'
     );
   }
 
