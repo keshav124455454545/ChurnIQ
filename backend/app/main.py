@@ -76,6 +76,24 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 
+@app.get("/", tags=["System"])
+async def root():
+    """Root status endpoint returning service info and documentation links."""
+    dist_index = settings.BASE_DIR / "frontend" / "dist" / "index.html"
+    if dist_index.is_file():
+        return FileResponse(dist_index)
+    return {
+        "service": settings.PROJECT_NAME,
+        "version": settings.VERSION,
+        "status": "online",
+        "docs_url": "/docs",
+        "health_url": "/health",
+        "model_info_url": "/model-info",
+        "metrics_url": "/metrics",
+        "predict_url": "/predict",
+    }
+
+
 @app.get("/health", response_model=HealthResponse, tags=["System"])
 async def get_health():
     """Returns service health status and model readiness."""
